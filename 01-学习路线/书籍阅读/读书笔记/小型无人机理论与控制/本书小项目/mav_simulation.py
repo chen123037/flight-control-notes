@@ -1,6 +1,26 @@
 """
-MAV六自由度仿真主程序
-连接动力学模型和3D可视化动画
+MAV六自由度仿真主程序（统一入口）
+===============================
+
+本模块提供MAV仿真的统一入口，默认使用四元数版本。
+
+【重要】四元数是本项目的标准姿态表示方法：
+- 内部计算使用四元数，避免万向锁
+- 外部接口兼容欧拉角输入/输出
+- 所有新开发应基于四元数模块
+
+推荐使用方式:
+    from mav_sim_quat import MAVSimulationQuat
+    sim = MAVSimulationQuat(params)
+
+本文件保留旧版MAVViewer和MAVSimulation用于向后兼容。
+新开发请使用 mav_sim_quat.py 中的 MAVSimulationQuat 类。
+
+模块结构:
+- quaternion.py          : 四元数工具函数
+- mav_dynamics_quat.py   : 四元数动力学模型
+- forces_moments_quat.py : 力与力矩计算（四元数版）
+- mav_sim_quat.py        : 四元数仿真主类（推荐）
 """
 
 import numpy as np
@@ -9,7 +29,14 @@ from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d import Axes3D
 
 from mav_params import ZagiParams, UAVParams, g
+
+# 向后兼容：导入旧版欧拉角模块
 from mav_dynamics import MAVDynamics, create_mav_from_params, StateIndex
+
+# 【推荐】导入四元数版本
+from mav_sim_quat import MAVSimulationQuat
+from mav_dynamics_quat import MAVDynamicsQuat, StateIndexQuat
+from quaternion import euler_to_quaternion, quaternion_to_euler
 
 
 class MAVViewer:
@@ -388,8 +415,13 @@ class MAVSimulation:
 
 
 def demo_gravity_only():
-    """演示：仅重力作用下的自由落体"""
-    print("=== 演示：重力作用下的运动 ===")
+    """
+    演示：仅重力作用下的自由落体（旧版欧拉角实现）
+
+    注意：此函数保留用于向后兼容，新开发请使用 demo_quaternion()
+    """
+    print("=== 演示：重力作用下的运动（欧拉角版本）===")
+    print("提示：推荐使用 mav_sim_quat.py 中的四元数版本")
 
     # 创建MAV
     mav = create_mav_from_params(ZagiParams)
@@ -424,5 +456,28 @@ def demo_gravity_only():
     sim.animate(speed=1.0)
 
 
+def demo_quaternion():
+    """
+    演示：四元数MAV仿真（推荐）
+
+    这是本项目推荐的仿真方式，使用四元数避免万向锁问题。
+    """
+    print("=" * 50)
+    print("四元数MAV仿真演示（推荐方式）")
+    print("=" * 50)
+
+    # 直接使用四元数仿真模块
+    from mav_sim_quat import demo_quaternion_simulation
+    demo_quaternion_simulation()
+
+
 if __name__ == "__main__":
-    demo_gravity_only()
+    print("MAV仿真系统 - 统一入口")
+    print("=" * 50)
+    print("本系统默认使用四元数进行姿态计算")
+    print("四元数优点: 无万向锁、计算效率高、数值稳定")
+    print("=" * 50)
+    print()
+
+    # 默认运行四元数演示
+    demo_quaternion()
